@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 # src/models/main.py
-"""
-                         Manipulação de dados
-    ------------------------------------------------------------------------
-                               Main
-    ------------------------------------------------------------------------
-    
-    
-"""
+
 import requests
 import json
 import pymongo
@@ -42,8 +35,6 @@ def get_request():
     except requests.exceptions.RequestException as err:
         print ("OOps: Something Else", err)
         return None
-
-
 
 
 def agroup(data):
