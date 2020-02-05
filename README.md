@@ -45,6 +45,7 @@ conter uma lista com os produtos comprados.
 
 
 A timeline deve ser ordenada pelo campo **timestamp** na ordem **decrescente**.
+
 A resposta esperada dessa função é a seguinte:
 
 ```markdown
