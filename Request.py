@@ -1,99 +1,136 @@
 # -*- coding: utf-8 -*-
-# src/models/main.py
-"""
-                         Manipulação de dados
-    ------------------------------------------------------------------------
-                               Main
-    ------------------------------------------------------------------------
-    
-    
-"""
+
 import requests
 import json
 import pymongo
+from operator import itemgetter
 
 
-from operator import itemgetter 
 
 def BD(conteudo1):
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
-    db = client["Banco"]
-    customers = db["Banco"]
-    customers_list = [conteudo1]
-    x = customers.insert_many(customers_list)
-    print(x.inserted_ids)
-
-
-def get_request():
-    try:
-        data= requests.get("https://storage.googleapis.com/dito-questions/events.json", "Content-Type: application/json")
-        if data.status_code == 200:
-            return data.text
-        return None
-    except requests.exceptions.HTTPError as errh:
-        print ("Http Error:", errh)
-        return None
-    except requests.exceptions.ConnectionError as errc:
-        print ("Error Connecting:", errc)
-        return None
-    except requests.exceptions.Timeout as errt:
-        print ("Timeout Error:", errt)
-        return None
-    except requests.exceptions.RequestException as err:
-        print ("OOps: Something Else", err)
-        return None
+  client = pymongo.MongoClient("mongodb://localhost:27017/")
+  db = client["Banco"]
+  customers = db["Banco"]
+  customers_list = [conteudo1, conteudo2]
+  x = customers.insert_many(customers_list)
+  #print list of the _id values of the inserted documents:
+  print(x.inserted_ids)
 
 
 
+def comprou(timestamp, revenue, transaction_id, store_name):
+  Compra = {
+        "timeline": 
+          {
+            "timestamp": timestamp,
+            "revenue": revenue,
+            "transaction_id": transaction_id,
+            "store_name": store_name,
+          }
+  }
+  #print(Compra)
+  return Compra
+  
 
-def agroup(data):
-	data= data.get('events')
-	groups={}
-	timeline=[]
-	for i in range(0, len(data)):
-		event_comprou= data[i]
-		if event_comprou['event'] == 'comprou':
-			compra={}
-			compra['timestamp']= event_comprou.get('timestamp')
-			compra['revenue']= event_comprou.get('revenue')
-			custom_data= event_comprou.get('custom_data')
-			for i in range(0, len(custom_data)):
-				if custom_data[i].get('key') == 'transaction_id':
-					transaction= custom_data[i].get('value')
-					compra['transaction_id']= custom_data[i].get('value')
-				if custom_data[i].get('key') == 'store_name':
-					compra['store_name']= custom_data[i].get('value')
-			products= []
-			event= False
-			for j in range(0, len(data)):
-				product= {}
-				event_comprou_produto= data[j]
-				if event_comprou_produto['event'] == 'comprou-produto':
-					custom_data_produto= event_comprou_produto.get('custom_data')	
-					for k in range(0, len(custom_data_produto)):
-						item=custom_data_produto[k]
-						if item.get('key') == 'transaction_id':
-							if item.get('value') == transaction:
-								event= True
-					if event == True:
-						for i in range(0, len(custom_data_produto)):
-							if custom_data_produto[i].get('key') == 'product_name':
-								product['name']= custom_data_produto[i].get('value')
-							if custom_data_produto[i].get('key')  == 'product_price':
-								product['price']= custom_data_produto[i].get('value')
-						event= False
-						products.append(product)
-			compra['products']= products
-			timeline.append(compra)
-	timeOrder= sorted(timeline, key=itemgetter('timestamp'), reverse = True) 
-	groups['timeline']= timeOrder
-	BD(groups)
+def comprouProduto(product_price, transaction_id, product_name):
+  CompraProduto = {
+        "transaction_id": transaction_id,
+        "products":
+            {
+              "name": product_name,
+              "price": product_price # somar produtos
+            }
+  }
+  #print(CompraProduto)
+  return CompraProduto
 
 
-class CompraResult:
-    def Resultado():
-        if __name__ == '__main__':
-            if not get_request():
-                print("Not request (Exception)")
-                
-        return agroup(json.loads(get_request()))
+
+r = requests.get("https://storage.googleapis.com/dito-questions/events.json", "content-type: application/json Accept-Charset: UTF-8")
+
+
+if r.status_code == 200:
+
+  data = json.loads(r.content)
+
+  contador = 0
+  cont = len(data['events'])
+
+  product_price =None 
+  transaction_id = None
+  product_name = None 
+  timestamp =None
+  revenue = None
+  transaction_id =None
+  store_name = None
+  conteudo1 = None
+  conteudo2 = None
+
+
+
+  for obj in data['events']:
+
+    while(contador <= cont):
+      groups={}
+      timeline=[]
+
+      # Comprou-Produto
+      conteudoComprouProduto=[]
+      if (obj['event'] == 'comprou-produto'):
+        for obj2 in obj['custom_data']:
+          if (obj2['key'] == 'product_name'):
+            product_name = obj2['value']
+            #print("product_name: " + product_name)
+            conteudoComprouProduto.append(product_name)
+          else:
+            if (obj2['key']  == 'transaction_id'):
+              event = obj['event']
+              #print("event: " + event)
+              transaction_id = obj2['value']
+              #print("transaction_id: " + transaction_id)
+              conteudoComprouProduto.append(transaction_id)
+            else:
+              if (obj2['key']  == 'product_price'):
+                product_price = obj2['value']
+                #print("product_price: " + str(product_price))
+                conteudoComprouProduto.append(product_price)
+
+      #comprou
+      conteudoComprou={}
+      if(obj['event'] == 'comprou'):
+        for obj3 in obj['custom_data']:
+          if (obj3['key'] == 'transaction_id'):
+            event = obj['event']
+            #print("event: " + event)
+            transaction_id = obj3['value']
+            #print("transaction_id: " + transaction_id)
+            conteudoComprou.append(transaction_id)
+            timestamp = obj['timestamp']
+            #print("timestamp: " + timestamp)
+            conteudoComprou.append(timestamp)
+          else:
+            if (obj3['key'] == 'store_name'):   
+              store_name = obj3['value']
+              #print("store_name: " + store_name)
+              conteudoComprou.append(store_name)
+              revenue = obj['revenue']
+              #print("revenue: " + str(revenue))
+              conteudoComprou.append(revenue)
+        
+      contador += 1
+      
+    conteudoComprou['products'] = conteudoComprouProduto
+    timeline.append(conteudoComprou)
+    timeOrder= sorted(timeline, key=itemgetter('timestamp'), reverse = True) 
+    groups['timeline']= timeOrder
+    print(groups)
+
+
+    #Enviar para o BD
+      #BD(conteudo2)
+
+
+else:
+    print ("Failed!  Status Code : " + str(r.status_code))
+
+
