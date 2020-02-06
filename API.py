@@ -19,10 +19,6 @@ def GetBD():
 
 class SearchForm(Form):
     autocomp = TextField('Event', id='events_autocomplete')
-    select = Button
-
-
-
 
 @app.route('/autocomplete', methods=['GET'])
 def autocomplete():
