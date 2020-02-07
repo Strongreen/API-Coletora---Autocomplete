@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-# src/models/main.py
 
 import requests
 import json
 import pymongo
-
 
 from operator import itemgetter 
 
@@ -15,6 +13,16 @@ def BD(conteudo1):
     customers_list = [conteudo1]
     x = customers.insert_many(customers_list)
     print(x.inserted_ids)
+
+def GetBD():
+    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    db = client["Banco"]
+    customers = db["Banco"]
+    #customers.delete_many({})
+    compras = []
+    for itens in customers.find():
+        compras.append(itens)
+    return compras
 
 
 def get_request():
@@ -37,7 +45,10 @@ def get_request():
         return None
 
 
+
+
 def agroup(data):
+	
 	data= data.get('events')
 	groups={}
 	timeline=[]
@@ -78,13 +89,14 @@ def agroup(data):
 			timeline.append(compra)
 	timeOrder= sorted(timeline, key=itemgetter('timestamp'), reverse = True) 
 	groups['timeline']= timeOrder
-	BD(groups)
+	#BD(groups)
+	#print(groups)
+	Data = GetBD()
+	conteudo = json.dumps(Data[0],default=str)
+	print(conteudo)
 
 
-class CompraResult:
-    def Resultado():
-        if __name__ == '__main__':
-            if not get_request():
-                print("Not request (Exception)")
-                
-        return agroup(json.loads(get_request()))
+if __name__ == '__main__':
+	if not get_request():
+		print("Not request (Exception)")		
+	agroup(json.loads(get_request()))
