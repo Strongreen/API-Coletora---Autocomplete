@@ -11,7 +11,7 @@ def BD(conteudo1):
   client = pymongo.MongoClient("mongodb://localhost:27017/")
   db = client["Banco"]
   customers = db["Banco"]
-  customers_list = [conteudo1, conteudo2]
+  customers_list = [conteudo1]
   x = customers.insert_many(customers_list)
   #print list of the _id values of the inserted documents:
   print(x.inserted_ids)
